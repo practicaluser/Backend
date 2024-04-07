@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>삭제 기능 구현</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <style>
+      #button1 {
+        margin-left: 100px;
+      }
+
+      @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap');
+
+      * {
+        font-family: 'Gowun Dodum', sans-serif;
+      }
+
+      .mytitle {
+        background-color: green;
+        color: white;
+
+        height: 250px;
+
+        /* 내용물을 정렬 */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        background-image: linear-gradient(
+            0deg,
+            rgba(0, 0, 0, 0.2),
+            rgba(0, 0, 0, 0.2)
+          ),
+          url('https://images.unsplash.com/photo-1511992243105-2992b3fd0410?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80');
+        background-position: center;
+        background-size: cover;
+      }
+
+      .mytitle > button {
+        width: 150px;
+        height: 50px;
+        background-color: transparent;
+        border: none;
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
+        border-radius: 5px;
+
+        border: 1px solid white;
+        margin-top: 20px;
+      }
+
+      .mycards {
+        margin: 30px auto 20px auto;
+        width: 1200px;
+      }
+      .mypostbox {
+        width: 500px;
+        margin: 30px auto 20px auto;
+        padding: 20px;
+        box-shadow: 0px 0px 3px 0px blue;
+        border-radius: 5px;
+      }
+
+      .mybtn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .mybtn > button {
+        margin-right: 5px;
+      }
+    </style>
+
+    <script type="module">
+      // Firebase SDK 라이브러리 가져오기
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js'
+      import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js'
+      import {
+        collection,
+        addDoc,
+      } from 'https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js'
+      import { getDocs } from 'https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js'
+
+      // const firebaseConfig = {
+      //   본인 코드 불어넣기
+      // }
+
+      
+
+      // Firebase 인스턴스 초기화
+      const app = initializeApp(firebaseConfig)
+      const db = getFirestore(app)
+
+      //클릭 시 저장
+      $('#postingbtn').click(async function () {
+        let image = $('#image').val()
+        let title = $('#title').val()
+        let name = $('#name').val()
+        let recommendation = $('#recommendation').val()
+
+        let doc = {
+          image: image,
+          title: title,
+          name: name,
+          recommendation: recommendation,
+        }
+
+        await addDoc(collection(db, 'ice'), doc)
+        alert('저장 완료!')
+        window.location.reload()
+      })
+
+      let docs = await getDocs(collection(db, 'ice'))
+
+      //클릭시 삭제기능과 확대기능 구현
+      document.addEventListener('click', async function (event) {
+        if (event.target && event.target.id === 'delete1') {
+          if (confirm('정말 삭제하시겠습니까?')) {
+            var card = event.target.closest('.card')
+            if (card) {
+              var cardClass = card.classList.value
+              card.style.transition = 'transform 0.5s ease-in-out'
+              card.style.transform = 'translateX(500%)'
+              setTimeout(() => {
+                card.parentElement.removeChild(card)
+              }, 500)
+            }
+          }
+        } else if (event.target && event.target.id === 'enlargement') {
+          var card = event.target.closest('.card')
+          if (card) {
+            // 현재 확대 상태를 확인하기 위한 변수
+            var isEnlarged = card.style.transform === 'scale(1.5)'
+            // 확대/축소 토글
+            if (isEnlarged) {
+              card.style.transform = '' // 기본 값으로 변경하여 축소
+              card.style.zIndex = '' // 기본 값으로 변경하여 다른 카드와 같은 레벨로 설정
+            } else {
+              // 확대될 때 zIndex 값을 크게 설정하여 다른 카드보다 앞쪽에 표시
+              card.style.transition = 'transform 0.5s ease-in-out'
+              card.style.transform = 'scale(1.5)' // 확대
+              card.style.zIndex = '999' // 다른 카드보다 큰 값으로 설정
+              // 여기에 추가적인 확대 작업을 수행할 수 있습니다.
+            }
+          }
+        }
+      })
+
+      let cardCount = 1
+      // let cardNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+      docs.forEach((doc) => {
+        let row = doc.data()
+        let image = row['image']
+        let title = row['title']
+        let name = row['name']
+        let recommendation = row['recommendation']
+
+        var temp_html = `
+            <div class="card ${cardCount}" style="width: 18rem">
+                <img src="${image}" class="card-img-top" alt="...">
+                <div class="card-body">
+                    <h5 class="card-title">${title}</h5>
+                    <h5 class="card-text">${name}</h5>
+                    <h5>${recommendation}</h5>
+                    <button type="button" class="btn btn-dark" id="delete1">삭제</button>
+                    <button type="button" class="btn btn-dark" id="enlargement">확대</button>
+                </div>
+            </div>
+        `
+
+        $('#cards').append(temp_html)
+
+        cardCount++
+      })
+    </script>
+  </head>
+  <body>
+    <div class="mypostbox" id="postingbox">
+      <div class="form-floating mb-3">
+        <input
+          type="email"
+          class="form-control"
+          id="image"
+          placeholder="name@example.com"
+        />
+        <label for="floatingInput">아이스크림 이미지</label>
+      </div>
+
+      <div class="form-floating mb-3">
+        <input
+          type="email"
+          class="form-control"
+          id="title"
+          placeholder="name@example.com"
+        />
+        <label for="floatingInput">제목</label>
+      </div>
+
+      <div class="form-floating mb-3">
+        <input
+          type="email"
+          class="form-control"
+          id="name"
+          placeholder="name@example.com"
+        />
+        <label for="floatingInput">작성자 이름</label>
+      </div>
+
+      <div class="form-floating">
+        <textarea
+          class="form-control"
+          placeholder="Leave a comment here"
+          id="recommendation"
+        ></textarea>
+        <label for="floatingTextarea">추천 이유</label>
+      </div>
+
+      <div class="mybtn">
+        <button id="postingbtn" type="button" class="btn btn-primary">
+          등록하기
+        </button>
+      </div>
+    </div>
+
+    <div class="mycards">
+      <div id="cards" class="row row-cols-1 row-cols-md-4 g-4"></div>
+    </div>
+
+    <!-- 카드샘플 -->
+    <!-- <div class="cards">
+      <div class="card" style="width: 18rem">
+        <img
+          src="https://static.megamart.com/product/image/1326/13266509/13266509_1_960.jpg"
+          class="card-img-top"
+        />
+        <div class="card-body">
+          <h5 class="card-title">제목: 슈팅스타</h5>
+          <h5 class="card-text">작성자 이름: 이춘우</h5>
+          <h5>추천 이유: 아이스크림의 톡 쏘는 맛이 마음에 듭니다.</h5>
+
+          <button type="button" class="btn btn-dark" id="delete1">삭제</button>
+        </div>
+      </div> -->
+    </div>
+  </body>
+</html>
